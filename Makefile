@@ -5,3 +5,4 @@ quickgrab : quickgrab.m
 
 clean:
 	rm quickgrab
+
