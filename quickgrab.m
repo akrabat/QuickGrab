@@ -1,6 +1,6 @@
 // Compile this way:
 //      gcc -framework cocoa -x objective-c -o quickgrab quickgrab.m
-//  
+//
 
 #define MYLog(...) do { if (__builtin_expect(kDebuggingEnabled, 0)) { NSLog(__VA_ARGS__); } } while(0)
 
@@ -27,26 +27,26 @@ void showWindowList(int pid);
 void showWindowList(int pid)
 {
     MYLog(@"List of windows available for capture...");
-    
+
     CGWindowListOption listOptions = kCGWindowListOptionOnScreenOnly | kCGWindowListExcludeDesktopElements;
     CFArrayRef windowList = CGWindowListCopyWindowInfo(listOptions, kCGNullWindowID);
-    MYLog(@"Found %d windows\n", CFArrayGetCount(windowList));
-    //MYLog(@"%@", windowList);   
+    MYLog(@"Found %ld windows\n", CFArrayGetCount(windowList));
+    //MYLog(@"%@", windowList);
 
     //Lets walk through the list
     for (NSMutableDictionary* entry in (NSArray*)windowList)
-    {     
+    {
         NSString *ownerName = [entry objectForKey: (id)kCGWindowOwnerName];
         NSInteger ownerPID = [[entry objectForKey: (id)kCGWindowOwnerPID] integerValue];
         NSString *name = [entry objectForKey: (id)kCGWindowName];
         NSNumber *wnumber = [entry objectForKey: (id)kCGWindowNumber];
         NSNumber *wlevel = [entry objectForKey: (id)kCGWindowLayer];
-        
+
         // Show all or specific app windows at 0 Level only
-        if ( (pid == 0 || ownerPID  == pid ) && [wlevel integerValue] == 0) 
+        if ( (pid == 0 || ownerPID  == pid ) && [wlevel integerValue] == 0)
             NSPrint(@"App: %@, PID: %d, Window ID: %d, Window Title: %@", \
                 ownerName, ownerPID, [wnumber integerValue], name);
-        
+
     }
 
 }
@@ -88,24 +88,24 @@ void grabWindow(int winid, NSString *filename);
 void grabWindow(int winid, NSString *filename)
 {
     MYLog(@"Getting image of window id: %d", winid);
-    
+
     CGImageRef cgImage = CGWindowListCreateImage(CGRectNull, \
-        kCGWindowListOptionIncludingWindow, winid, kCGWindowImageDefault);    
-    
+        kCGWindowListOptionIncludingWindow, winid, kCGWindowImageDefault);
+
     if(cgImage == NULL)
 	    exit(3);
-	    
+
 	MYLog(@"Image created...");
-	
+
     // Create a bitmap rep from the image...
     NSBitmapImageRep *bitmapRep = [[NSBitmapImageRep alloc] initWithCGImage:cgImage];
-    
+
     // Save the file
-    NSData *data = [bitmapRep representationUsingType: NSPNGFileType properties: nil];
+    NSData *data = [bitmapRep representationUsingType: NSPNGFileType properties: @{}];
     [data writeToFile: filename atomically: NO];
-    
+
     CGImageRelease(cgImage);
-    
+
     MYLog(@"Image saved to %@", filename);
 }
 
@@ -114,8 +114,8 @@ void grabWindow(int winid, NSString *filename)
 int main(int argc, char *argv[])
 {
     id pool=[NSAutoreleasePool new];
-    
-    // Get command line arguments    
+
+    // Get command line arguments
     NSUserDefaults *args = [NSUserDefaults standardUserDefaults];
     NSString *fileArg  = [args stringForKey:@"file"];
     NSInteger pidArg = [args integerForKey:@"pid"];
@@ -124,18 +124,18 @@ int main(int argc, char *argv[])
     BOOL debugArg = [args boolForKey:@"debug"];
 
     // Enable debugging if user asks
-    if ( debugArg == 1) 
+    if ( debugArg == 1)
     {
         kDebuggingEnabled = YES;
     }
-    
+
     MYLog(@"%@", [[NSProcessInfo processInfo] arguments]);
     MYLog(@"Output File(fileArg)   = %@", fileArg);
-    MYLog(@"Process ID(pidArg)    = %d", pidArg);
-    MYLog(@"Window ID(widArg)    = %d", widArg);
+    MYLog(@"Process ID(pidArg)    = %ld", pidArg);
+    MYLog(@"Window ID(widArg)    = %ld", widArg);
     MYLog(@"Show Window List    = %d", listArg);
     MYLog(@"Enable Debugging    = %d", debugArg);
-    
+
 //     if ( listArg )
 //     {
 //         showWindowList(pidArg);
@@ -150,31 +150,31 @@ int main(int argc, char *argv[])
     }
 
     MYLog(@"Getting list of windows available for capture...");
-    
+
     CGWindowListOption listOptions = kCGWindowListOptionOnScreenOnly | kCGWindowListExcludeDesktopElements;
     CFArrayRef windowList = CGWindowListCopyWindowInfo(listOptions, kCGNullWindowID);
-    MYLog(@"Found %d windows\n", CFArrayGetCount(windowList));
-    //MYLog(@"%@", windowList);   
+    MYLog(@"Found %ld windows\n", CFArrayGetCount(windowList));
+    //MYLog(@"%@", windowList);
 
     //Lets walk through the list
     for (NSMutableDictionary* entry in (NSArray*)windowList)
-    {     
+    {
         NSString *ownerName = [entry objectForKey: (id)kCGWindowOwnerName];
         NSInteger ownerPID = [[entry objectForKey: (id)kCGWindowOwnerPID] integerValue];
         NSString *name = [entry objectForKey: (id)kCGWindowName];
         NSNumber *wnumber = [entry objectForKey: (id)kCGWindowNumber];
         NSNumber *wlevel = [entry objectForKey: (id)kCGWindowLayer];
-        
+
         // Only interested on windows at 0 level only
-        if ([wlevel integerValue] == 0) 
-            if ( listArg ) 
+        if ([wlevel integerValue] == 0) {
+            if ( listArg )
             {
-                if (pidArg == 0 || ownerPID  == pidArg ) 
+                if (pidArg == 0 || ownerPID  == pidArg )
                     NSPrint(@"App: %@, PID: %d, Window ID: %d, Window Title: %@", \
                         ownerName, ownerPID, [wnumber integerValue], name);
-        
-            } 
-            else 
+
+            }
+            else
             {
                 // User didn't say so we grab the first (top most) window
                 if ( pidArg == 0 && widArg == 0 )
@@ -188,16 +188,17 @@ int main(int argc, char *argv[])
                 {
                     grabWindow([wnumber integerValue], fileArg);
                     break;
-                } 
-                
+                }
+
                 // Finally if they gave a specific window id
                 if ( widArg == [wnumber integerValue] )
                 {
                     grabWindow([wnumber integerValue], fileArg);
                     break;
-                } 
- 
+                }
+
             }
+        }
     }
 
     [pool drain];
