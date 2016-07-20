@@ -179,6 +179,10 @@ int main(int argc, char *argv[])
                 // User didn't say so we grab the first (top most) window
                 if ( pidArg == 0 && widArg == 0 )
                 {
+                    if ([name isEqualToString:@""]) {
+                        MYLog(@"Skipping as there's no window name. entry: %@", entry);
+                        continue;
+                    }
                     grabWindow([wnumber integerValue], fileArg);
                     break;
                 }
